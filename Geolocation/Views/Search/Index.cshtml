@@ -1,0 +1,26 @@
+﻿@model Geolocation.Models.SearchModel
+@{
+    ViewBag.Title = "Index";
+}
+
+<h4>Search Stores</h4>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            @using (Html.BeginForm("GetLocations","Search",FormMethod.Post))
+            {
+                <div class="row">
+                    <div class="col-md-3">
+                        Enter Address or ZipCode
+                    </div>
+                    <div class="col-md-2">
+                        @Html.TextBoxFor(x => x.SearchInput, null, new { @class="form-control"})
+                    </div>
+                    <div class="col-md-1">
+                        <button id="submit" type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

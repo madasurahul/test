@@ -1,0 +1,126 @@
+﻿@model IEnumerable<Geolocation.Models.RxMapModel>
+@{
+    ViewBag.Title = "Result";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script type="text/javascript"
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6v5-2uaq_wusHDktM9ILcqIrlPtnZgEk&sensor=false">
+</script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places">
+</script>
+<style>
+    .inActive {
+        color: #dedede !important;
+    }
+
+    .active {
+        color: #ffd800 !important;
+    }
+</style>
+
+<p>
+    @Html.ActionLink("Back to Search", "Index")
+</p>
+<div class="row">
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-5" style=" height: 500px">
+                <div class="list-group">
+                    @foreach (var item in Model)
+                    {
+                        <div class="list-group-item">
+                            <h4 class="list-group-item-heading headContainer">
+                                <a id="favAnchor" href="#" class='@(item.IsFavourite?"active":"inActive")' data-value="@(item.storenumber)"> <span class='glyphicon glyphicon-star' aria-hidden="true"></span> </a>
+                                @Html.DisplayFor(modelItem => item.storename)
+                            </h4>
+                            <p class="list-group-item-text">
+                                @Html.DisplayFor(model => item.addressline).<br />
+                                @Html.DisplayFor(model => item.city) - @Html.DisplayFor(model => item.state)<br />
+                                @Html.DisplayFor(model => item.zipcode) <br />
+                                <strong>Distance:</strong> @Math.Round(Convert.ToDouble(Html.DisplayFor(model => item.Distance).ToString()), 2) <br />
+                                <a class="btn btn-primary" aria-label="Left Align" href="~/Search/StoreDetails">
+                                    <span class="glyphicon glyphicon-list-alt" aria-hidden="true">&nbsp;</span>Details
+                                </a>
+                                <a class="btn btn-success" aria-label="Left Align" href="~/Search/Directions?to=@Html.DisplayFor(model => item.latitude),@Html.DisplayFor(model => item.longitude)">
+                                    <span class=" glyphicon glyphicon-send" aria-hidden="true">&nbsp;</span>Directions
+                                </a>
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div id="map_canvas" style=" height: 500px"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+
+
+<script type="text/javascript">
+
+    var markers = [];
+    @foreach (var item in Model)
+    {
+        @:markers.push({ "title": '@item.storename', "lat": '@item.latitude', "lng": '@item.longitude', "description": '@item.addressline' });
+                                                                        }
+
+    $(document).ready(function () {
+        var mapOptions = {
+            center: new google.maps.LatLng(markers[0].lat, markers[0].lng),
+            zoom: 6,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+
+        //Create and open InfoWindow.
+        var infoWindow = new google.maps.InfoWindow();
+
+        for (var i = 0; i < markers.length; i++) {
+            var data = markers[i];
+            var myLatlng = new google.maps.LatLng(data.lat, data.lng);
+            var marker = new google.maps.Marker({
+                position: myLatlng,
+                map: map,
+                title: data.title
+            });
+
+            //Attach click event to the marker.
+            (function (marker, data) {
+                google.maps.event.addListener(marker, "click", function (e) {
+                    //Wrap the content inside an HTML DIV in order to set height and width of InfoWindow.
+                    infoWindow.setContent("<div style = 'width:200px;min-height:40px'>" + data.description + "</div>");
+                    infoWindow.open(map, marker);
+                });
+            })(marker, data);
+        }
+    });
+
+    $(document).ready(function () {
+        $('.headContainer').on('click', 'a', function () {
+            debugger;
+            var ctl = $(this);
+            var sCode = ctl.data('value');
+            $.ajax({
+                async: false,
+                type: 'GET',
+                url: "/Search/ToggleFavourite?storecode=" + sCode,
+                success: function (data) {
+                    if (data) {
+                        ctl.removeClass("inActive");
+                        ctl.addClass("active");
+                    }
+                    else {
+                        ctl.removeClass("active");
+                        ctl.addClass("inActive");
+                    }
+                }
+            });
+        });
+    });
+</script>
